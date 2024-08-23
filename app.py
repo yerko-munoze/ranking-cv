@@ -7,7 +7,7 @@ from nltk.corpus import stopwords
 import PyPDF2
 
 # Descargar recursos de NLTK
-nltk.download('punkt')
+nltk.download('punkt_tab')
 nltk.download('wordnet')
 nltk.download('stopwords') # Eliminar palabras tipicas
 
