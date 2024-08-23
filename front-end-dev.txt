@@ -1,0 +1,5 @@
+Estamos buscando un/a desarrollador front-end con experiencia en HTML, CSS y JavaScript. 
+El candidato ideal deberá tener conocimientos sólidos en frameworks como React o Angular, 
+así como experiencia en el desarrollo de interfaces de usuario atractivas y funcionales. 
+Se valorará la capacidad de trabajar en equipo, la adaptabilidad a nuevas tecnologías y el 
+compromiso con la calidad del código.

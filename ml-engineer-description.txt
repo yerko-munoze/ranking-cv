@@ -1,0 +1,5 @@
+Se requiere un/a ingeniero en machine learning con experiencia en el desarrollo e 
+implementación de modelos de aprendizaje automático. El candidato ideal deberá tener 
+un profundo conocimiento de algoritmos de machine learning, estadística y matemáticas. 
+Se valorará experiencia en el uso de Python y bibliotecas como TensorFlow o PyTorch, 
+así como la capacidad de analizar y interpretar grandes volúmenes de datos
