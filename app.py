@@ -4,7 +4,7 @@ import nltk
 import pandas as pd
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
-import PyPDF2
+import pypdf
 
 # Descargar recursos de NLTK
 nltk.download('punkt_tab')
@@ -33,7 +33,7 @@ def preprocess_text(text):
     return lemmatized_words 
 
 def extract_text_from_pdf(pdf_file):
-    pdf_reader = PyPDF2.PdfReader(pdf_file)
+    pdf_reader = pypdf.PdfReader(pdf_file)
     text = ""
     for page_num in range(len(pdf_reader.pages)):
         page_text = pdf_reader.pages[page_num].extract_text()
