@@ -4,12 +4,16 @@ import nltk
 import pandas as pd
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.neighbors import NearestNeighbors
 import pypdf
+from unidecode import unidecode
 
 # Descargar recursos de NLTK
-nltk.download('punkt_tab')
+nltk.download('punkt')
 nltk.download('wordnet')
-nltk.download('stopwords') # Eliminar palabras tipicas
+nltk.download('stopwords')
 
 # Inicializar lematizador y stopwords
 lemmatizer = WordNetLemmatizer()
@@ -23,92 +27,78 @@ synonyms = {
     'power bi': ['visualización', 'análisis de datos', 'dashboard', 'informes'],
     'desarrollo': ['creación', 'programación', 'implementación'],
     'reportes': ['informes', 'análisis'],
-    'cloud': ['AWS', 'Azure']
+    'cloud': ['AWS', 'Azure'],
+    'comercial': ['recursos humanos', 'economía', 'administración', 'gestión']
 }
 
 def preprocess_text(text):
-    text = re.sub(r'[^a-zA-Z\s]', '', text)
+    text = unidecode(text)  # Eliminar acentos
+    text = re.sub(r'[^\w\s]', '', text)  # Eliminar puntuación
     words = nltk.word_tokenize(text)
     lemmatized_words = [lemmatizer.lemmatize(word.lower()) for word in words if word.lower() not in stop_words]
-    return lemmatized_words 
+    return ' '.join(lemmatized_words)
 
 def extract_text_from_pdf(pdf_file):
     pdf_reader = pypdf.PdfReader(pdf_file)
     text = ""
     for page_num in range(len(pdf_reader.pages)):
         page_text = pdf_reader.pages[page_num].extract_text()
-        if page_num == 0:
-            text += page_text
-        else:
-            text += (page_text + " ") * 2
+        text += page_text
     return text
 
-def calculate_experience_weight(text):
-    experience_keywords = ['años de experiencia', 'años']
-    total_years = 0
-    for keyword in experience_keywords:
-        match = re.search(rf'(\d+)\s*{keyword}', text)
-        if match:
-            total_years += int(match.group(1))
-    return min(total_years / 10, 1)
+def calculate_cosine_similarity(job_description, resumes):
+    documents = [job_description] + resumes
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(documents)
+    cosine_similarities = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
+    return cosine_similarities, tfidf_matrix
 
-def calculate_keyword_match(job_description_words, resume_words, essential_keywords):
-    # Expandir palabras clave con sinónimos
-    expanded_job_keywords = set()
-    for word in job_description_words:
-        expanded_job_keywords.add(word)
-        if word in synonyms:
-            expanded_job_keywords.update(synonyms[word])
+def apply_knn(tfidf_matrix, n_neighbors=5):
+    n_samples = tfidf_matrix.shape[0]
+    n_neighbors = min(n_neighbors + 1, n_samples)  # +1 para incluir el propio documento
 
-    common_words = set(expanded_job_keywords) & set(resume_words)
-    essential_matches = set(essential_keywords) & common_words
+    knn_model = NearestNeighbors(n_neighbors=n_neighbors, metric='cosine')
+    knn_model.fit(tfidf_matrix)
+    distances, indices = knn_model.kneighbors(tfidf_matrix)
+    return distances[:, 1:], indices[:, 1:]  # Omitir la primera columna que corresponde al propio documento
 
-    essential_weight = 2
-    match_score = (len(common_words) + essential_weight * len(essential_matches)) / len(job_description_words)
-    return match_score
-
-def analyze_experience(job_description, resume_text):
-
-    # Aqui se puede implementar un algoritmo más avanzado
-
-    return 0
+def rank_with_knn(cosine_similarities, indices):
+    knn_scores = []
+    for i, neighbors_indices in enumerate(indices):
+        valid_indices = [idx-1 for idx in neighbors_indices if idx-1 >= 0 and idx-1 < len(cosine_similarities)]
+        if valid_indices:
+            knn_scores.append(cosine_similarities[valid_indices].mean())
+        else:
+            knn_scores.append(0)
+    return knn_scores
 
 # Interfaz de usuario de Streamlit
 st.title("CV Match")
 
-# Input descripción del trabajo
 job_description = st.text_area("Ingrese una descripción de trabajo", height=100)
-
-# Input de palabras clave esenciales
-essential_keywords_input = st.text_input("Ingrese palabras clave esenciales separadas por comas", "python, sql, power bi, reportes")
-essential_keywords = [word.strip() for word in essential_keywords_input.split(",")]
-
-# Input para múltiples PDFs de CVs
 uploaded_pdfs = st.file_uploader("Subir CVs (Formato PDF)", type="pdf", accept_multiple_files=True)
 
 if job_description and uploaded_pdfs:
     job_description_processed = preprocess_text(job_description)
+    resumes_texts = [preprocess_text(extract_text_from_pdf(pdf)) for pdf in uploaded_pdfs]
+
+    cosine_similarities, tfidf_matrix = calculate_cosine_similarity(job_description_processed, resumes_texts)
+    distances, indices = apply_knn(tfidf_matrix)
+
+    knn_scores = rank_with_knn(cosine_similarities, indices)
 
     rankings = []
-
-    for uploaded_pdf in uploaded_pdfs:
-        resume_text = extract_text_from_pdf(uploaded_pdf)
-        resume_processed = preprocess_text(resume_text)
-
-        experience_weight = calculate_experience_weight(resume_text)
-        keyword_match = calculate_keyword_match(job_description_processed, resume_processed, essential_keywords)
-        experience_match = analyze_experience(job_description, resume_text)
-
-        similarity_adjusted = keyword_match * (1 + 0.1 * experience_weight + 0.2 * experience_match)
-
+    for i, uploaded_pdf in enumerate(uploaded_pdfs):
         rankings.append({
             "Archivo": uploaded_pdf.name,
-            "Puntaje Match": similarity_adjusted * 100
+            "Puntaje Match": knn_scores[i] * 100
         })
 
     df_ranking = pd.DataFrame(rankings).sort_values(by="Puntaje Match", ascending=False)
-
-    # Mejorar la visualización de la tabla
     st.dataframe(df_ranking.style.format({'Puntaje Match': '{:.2f}%'}), height=300, use_container_width=True)
+
 else:
     st.warning("Por favor ingrese una descripción y suba al menos un CV en formato PDF")
+
+
+
