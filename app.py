@@ -4,7 +4,11 @@ import nltk
 import pandas as pd
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
-import pypdf
+#import pypdf
+from pypdf import PdfReader
+
+
+
 
 # Descargar recursos de NLTK
 nltk.download('punkt_tab')
@@ -14,6 +18,7 @@ nltk.download('stopwords') # Eliminar palabras tipicas
 # Inicializar lematizador y stopwords
 lemmatizer = WordNetLemmatizer()
 stop_words = set(stopwords.words('spanish'))
+
 
 # Diccionario de sinónimos
 synonyms = {
@@ -33,7 +38,7 @@ def preprocess_text(text):
     return lemmatized_words 
 
 def extract_text_from_pdf(pdf_file):
-    pdf_reader = pypdf.PdfReader(pdf_file)
+    pdf_reader = PdfReader(pdf_file)
     text = ""
     for page_num in range(len(pdf_reader.pages)):
         page_text = pdf_reader.pages[page_num].extract_text()
@@ -80,7 +85,7 @@ st.title("CV Match")
 job_description = st.text_area("Ingrese una descripción de trabajo", height=100)
 
 # Input de palabras clave esenciales
-essential_keywords_input = st.text_input("Ingrese palabras clave esenciales separadas por comas", "python, sql, power bi, reportes")
+essential_keywords_input = st.text_input("Ingrese palabras clave esenciales separadas por comas", "Ejemplo: python, sql, power bi, reportes")
 essential_keywords = [word.strip() for word in essential_keywords_input.split(",")]
 
 # Input para múltiples PDFs de CVs
