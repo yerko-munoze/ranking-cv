@@ -7,9 +7,6 @@ from nltk.corpus import stopwords
 #import pypdf
 from pypdf import PdfReader
 
-
-
-
 # Descargar recursos de NLTK
 nltk.download('punkt_tab')
 nltk.download('wordnet')
@@ -28,7 +25,13 @@ synonyms = {
     'power bi': ['visualización', 'análisis de datos', 'dashboard', 'informes'],
     'desarrollo': ['creación', 'programación', 'implementación'],
     'reportes': ['informes', 'análisis'],
-    'cloud': ['AWS', 'Azure']
+    'cloud': ['AWS', 'Azure', 'DevOps', 'Terraform', 'IaC', 'SaaS', 'PaaS', 'Kubernetes', 'Virtualización'],
+    'recursos humanos': ['RRHH', 'gestión de personal', 'capital humano', 'talento humano', 'personal', 'empleado', 'colaborador', 'trabajador'],
+    'reclutamiento' : ['selección', 'contratación', 'búsqueda de talento', 'headhunting', 'onboarding'],
+    'liderazgo': ['motivación', 'trabajo en equipo', 'comunicación', 'resolución de conflictos'],
+    'desarrollo web': ['CSS','HTML', 'JavaScript', 'front-end', 'desarrollo web', 'maquetación', 'diseño web', 'interfaz de usuario', 'UX', 'UI'],
+    'React': ['Angular', 'Vue.js', 'framework', 'biblioteca', 'JavaScript', 'front-end'],
+    'Node.js': ['back-end', 'JavaScript', 'servidor', 'API', 'REST', 'Express.js']
 }
 
 def preprocess_text(text):
