@@ -7,3 +7,4 @@
 4. Run ``streamlit run app.py``.
 5. Use the txt job description and upload a PDF file (only PDF allowed).
 6. See the results and download the ``.csv`` if you want to. 
+
