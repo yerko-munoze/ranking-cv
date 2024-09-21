@@ -1,13 +1,7 @@
-import re
+# Graphical Interface
 import streamlit as st
-import nltk
 import pandas as pd
-from nltk.stem import WordNetLemmatizer
-from nltk.corpus import stopwords
-import pypdf
-from pypdf import PdfReader
 from transformation import *
-
 
 # Interfaz de usuario de Streamlit
 st.title("CV Match")
